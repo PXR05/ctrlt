@@ -7,6 +7,7 @@ export interface Shortcut {
 export interface SearchEngine {
   name: string;
   url: string;
+  suggestUrl: string;
   icon: string;
 }
 
@@ -47,16 +48,19 @@ export const engines: SearchEngine[] = [
   {
     name: "Google",
     url: "https://google.com/search?q=",
+    suggestUrl: "https://www.google.com/complete/search?client=chrome&q=",
     icon: "https://www.google.com/favicon.ico",
   },
   {
     name: "DuckDuckGo",
     url: "https://duckduckgo.com/?q=",
+    suggestUrl: "https://duckduckgo.com/ac/?type=list&q=",
     icon: "https://duckduckgo.com/favicon.ico",
   },
   {
     name: "Bing",
     url: "https://bing.com/search?q=",
+    suggestUrl: "https://www.bing.com/osjson.aspx?query=",
     icon: "https://www.bing.com/sa/simg/favicon-2x.ico",
   },
 ];

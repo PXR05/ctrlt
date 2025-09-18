@@ -2,19 +2,37 @@
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as Dropdown from "$lib/components/ui/dropdown-menu/index.js";
   import { Input } from "$lib/components/ui/input";
-  import type { Shortcut } from "$lib/data/startpage.js";
-  import { shortcuts as defaultShortcuts } from "$lib/data/startpage.js";
+  import type { Shortcut } from "$lib/data/default.js";
+  import { shortcuts as defaultShortcuts } from "$lib/data/default.js";
+  import { createStorageStore } from "$lib/stores/data.svelte.js";
+  import { z } from "zod";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import TrashIcon from "@lucide/svelte/icons/trash";
   import MoreVertical from "@lucide/svelte/icons/more-vertical";
 
-  const STORAGE_KEY = "startpage.shortcuts";
   const MAX_SHORTCUTS = 9;
   const columns = 3;
 
-  let initialized = $state(false);
-  let items = $state<Shortcut[]>([]);
+  const shortcutSchema = z.object({
+    name: z.string(),
+    url: z.string(),
+    icon: z.string(),
+  });
+
+  const shortcutsArraySchema = z.array(shortcutSchema);
+
+  const shortcutsStore = createStorageStore(
+    {
+      key: "startpage.shortcuts",
+      defaultValue: defaultShortcuts,
+      schema: shortcutsArraySchema,
+      maxItems: MAX_SHORTCUTS,
+    },
+    { debounceMs: 200 }
+  );
+
+  const items = $derived(shortcutsStore.data);
 
   let dialogOpen = $state(false);
   let editingIndex = $state<number | null>(null);
@@ -35,48 +53,6 @@
       return url;
     }
   }
-
-  function loadFromStorage(): Shortcut[] {
-    if (typeof window === "undefined") return defaultShortcuts;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as Shortcut[]) : null;
-      if (
-        Array.isArray(parsed) &&
-        parsed.every(
-          (v) =>
-            v &&
-            typeof v.name === "string" &&
-            typeof v.url === "string" &&
-            typeof v.icon === "string"
-        )
-      ) {
-        return parsed.slice(0, MAX_SHORTCUTS);
-      }
-    } catch {}
-    return defaultShortcuts;
-  }
-
-  function saveToStorage(next: Shortcut[]) {
-    if (typeof window === "undefined") return;
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(next.slice(0, MAX_SHORTCUTS))
-      );
-    } catch {}
-  }
-
-  $effect(() => {
-    if (!initialized && typeof window !== "undefined") {
-      items = loadFromStorage();
-      initialized = true;
-    }
-  });
-
-  $effect(() => {
-    if (initialized) saveToStorage(items);
-  });
 
   function openAddDialog() {
     editingIndex = null;
@@ -148,23 +124,25 @@
         saving = false;
         return;
       }
-      items = [...items, nextItem];
+      shortcutsStore.setData([...items, nextItem]);
     } else {
       const next = [...items];
       next[editingIndex] = nextItem;
-      items = next;
+      shortcutsStore.setData(next);
     }
     saving = false;
     dialogOpen = false;
   }
 
   function removeAt(index: number) {
-    const next = items.slice();
-    next.splice(index, 1);
-    items = next;
+    shortcutsStore.updateData((current) => {
+      const next = current.slice();
+      next.splice(index, 1);
+      return next;
+    });
   }
 
-  const addSpanClass = $derived(() => {
+  const addSpanClass = $derived.by(() => {
     if (items.length >= MAX_SHORTCUTS) return "";
     const mod = items.length % 3;
     if (mod === 0) return "col-span-3";
@@ -173,11 +151,11 @@
   });
 </script>
 
-<div class="md:col-span-2 grid grid-cols-3 border">
+<div class="md:col-span-2 grid grid-cols-3 border select-none">
   {#each items as shortcut, i}
     <div
-      class="group flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors
-			{i % columns !== columns - 1 ? 'border-r' : ''} 
+      class="relative group flex items-center px-3 py-2 hover:bg-white/5 transition-colors
+			{i % columns !== columns - 1 ? 'border-r' : ''}
 			{i < items.length - columns ? 'border-b' : ''}"
     >
       <a
@@ -194,10 +172,10 @@
           </div>
         </div>
       </a>
-      <div class="ms-auto">
+      <div class="absolute right-0 transition-all top-1/2 -translate-y-1/2">
         <Dropdown.DropdownMenu>
           <Dropdown.DropdownMenuTrigger
-            class="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground/60 hover:text-foreground transition-colors"
+            class="opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 group-hover:mr-1 data-[state=open]:mr-1 p-1 rounded text-muted-foreground hover:text-foreground transition-all"
             aria-label="Actions"
           >
             <MoreVertical class="size-4" />
@@ -208,15 +186,15 @@
             alignOffset={-10}
           >
             <Dropdown.DropdownMenuItem onclick={() => openEditDialog(i)}>
-              <PencilIcon class="size-3" />
-              <span class="text-xs"> Edit </span>
+              <PencilIcon class="size-4" />
+              <span class="text-sm"> Edit </span>
             </Dropdown.DropdownMenuItem>
             <Dropdown.DropdownMenuItem
               variant="destructive"
               onclick={() => removeAt(i)}
             >
-              <TrashIcon class="size-3" />
-              <span class="text-xs"> Remove </span>
+              <TrashIcon class="size-4" />
+              <span class="text-sm"> Remove </span>
             </Dropdown.DropdownMenuItem>
           </Dropdown.DropdownMenuContent>
         </Dropdown.DropdownMenu>
@@ -226,16 +204,11 @@
 
   {#if items.length < MAX_SHORTCUTS}
     <button
-      class="flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors border-t {addSpanClass}
-      {items.length % 3 === 0
-        ? 'col-span-full'
-        : items.length % 3 === 1
-          ? 'col-span-2'
-          : 'col-span-1'}"
+      class="flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors border-t {addSpanClass}"
       onclick={openAddDialog}
       type="button"
     >
-      <div class="size-6 shrink-0 grid place-items-center rounded border">
+      <div class="size-6 shrink-0 grid place-items-center border">
         <PlusIcon class="size-4" />
       </div>
       <div class="text-left">
@@ -287,11 +260,13 @@
         />
       </div>
       <Dialog.Footer>
-        <Dialog.Close type="button" class="px-3 py-2 border rounded"
+        <Dialog.Close type="button" class="px-3 py-2 border hover:bg-muted"
           >Cancel</Dialog.Close
         >
-        <button type="submit" class="px-3 py-2 border rounded" disabled={saving}
-          >{saving ? "Saving..." : "Save"}</button
+        <button
+          type="submit"
+          class="px-3 py-2 border hover:bg-muted"
+          disabled={saving}>{saving ? "Saving..." : "Save"}</button
         >
       </Dialog.Footer>
     </form>
