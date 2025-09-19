@@ -25,7 +25,7 @@
 
   const engineStore = createStorageStore(
     {
-      key: "searchbar.engine",
+      key: "startpage.searchengine",
       defaultValue: engines[0].name,
       schema: engineNameSchema,
     },
@@ -107,14 +107,17 @@
       return;
     }
 
-    debounceTimeout = setTimeout(async () => {
-      const response = await getSuggestions({
-        query: query.trim(),
-        url: currentEngine.suggestUrl,
-      });
-      suggestions = response;
-      showSuggestions = suggestions.length > 0;
-    }, showSuggestions ? 150 : 0);
+    debounceTimeout = setTimeout(
+      async () => {
+        const response = await getSuggestions({
+          query: query.trim(),
+          url: currentEngine.suggestUrl,
+        });
+        suggestions = response;
+        showSuggestions = suggestions.length > 0;
+      },
+      showSuggestions ? 150 : 0
+    );
   }
 
   function handleKeyDown(
@@ -122,12 +125,10 @@
       currentTarget: EventTarget & HTMLInputElement;
     }
   ) {
-    if (!showSuggestions) {
-      if (e.key === "Enter") {
-        const engine = engines.find((en) => en.name === selectedEngine);
-        if (engine && query.trim()) {
-          window.location.href = engine.url + encodeURIComponent(query.trim());
-        }
+    if (!showSuggestions && e.key === "Enter") {
+      const engine = engines.find((en) => en.name === selectedEngine);
+      if (engine && query.trim()) {
+        window.location.href = engine.url + encodeURIComponent(query.trim());
       }
       return;
     }
@@ -142,14 +143,20 @@
       scrollToSuggestion(selectedIndex);
     } else if (e.key === "Escape") {
       e.preventDefault();
-      selectedIndex = 0;
-      showSuggestions = false;
+      if (showSuggestions) {
+        selectedIndex = 0;
+        showSuggestions = false;
+      } else if (query.trim()) {
+        query = "";
+      } else {
+        inputRef?.blur();
+      }
     } else if (e.key === "Enter") {
       e.preventDefault();
       selectSuggestion(suggestions[selectedIndex]);
     }
   }
-  
+
   function scrollToSuggestion(i: number) {
     const el = document.getElementById(`suggestion-${i}`);
     if (el) {
@@ -168,7 +175,19 @@
       showSuggestions = false;
     }, 150);
   }
+
+  let inputRef = $state<HTMLInputElement | null>(null);
+  function handleShortcut(e: KeyboardEvent) {
+    if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      if (inputRef?.focus) {
+        inputRef.focus();
+      }
+    }
+  }
 </script>
+
+<svelte:window onkeydown={handleShortcut} />
 
 <div class="relative">
   <div class="flex items-center">
@@ -195,7 +214,7 @@
             hideCheck
             value={engine.name}
             label={engine.name}
-            class="px-3 p-2 hover:bg-muted data-[highlighted]:bg-muted cursor-pointer
+            class="text-foreground px-3 p-2 hover:bg-muted data-[highlighted]:bg-muted cursor-pointer
               {selected ? 'bg-muted font-medium' : ''}"
           >
             <img
@@ -214,19 +233,20 @@
       type="text"
       placeholder="query..."
       bind:value={query}
+      bind:ref={inputRef}
       oninput={handleInput}
       onfocus={handleInputFocus}
       onblur={handleInputBlur}
       onkeydown={handleKeyDown}
-      class="flex-1 px-3 h-10 bg-transparent placeholder:select-none"
+      class="flex-1 px-3 h-10 bg-transparent placeholder:select-none focus:placeholder:opacity-0"
     />
   </div>
 
   {#if showSuggestions && suggestions.length > 0}
     <div
       transition:slide={{
-        duration: 200, 
-        easing: quintInOut
+        duration: 200,
+        easing: quintInOut,
       }}
       class="absolute top-full left-0 right-0 bg-background border border-t-0 rounded-b-md shadow-lg z-50 max-h-56 overflow-y-auto"
     >

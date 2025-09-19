@@ -1,9 +1,6 @@
 import { browser } from "$app/environment";
 import type { ZodSchema } from "zod";
 
-/**
- * Configuration for a localStorage store
- */
 interface StorageConfig<T> {
   key: string;
   defaultValue: T;
@@ -11,19 +8,10 @@ interface StorageConfig<T> {
   maxItems?: number;
 }
 
-/**
- * Options for creating a localStorage store
- */
 interface StorageOptions {
   debounceMs?: number;
 }
 
-/**
- * Creates a reactive localStorage store with automatic persistence
- * @param config Configuration object containing key, default value, and Zod schema
- * @param options Optional configuration for debouncing and other features
- * @returns Object with data state and methods to manipulate it
- */
 export function createStorageStore<T>(
   config: StorageConfig<T>,
   options: StorageOptions = {}
@@ -35,9 +23,6 @@ export function createStorageStore<T>(
   let initialized = $state(false);
   let saveTimeout: number | undefined;
 
-  /**
-   * Load data from localStorage with validation
-   */
   function loadFromStorage(): T {
     if (!browser) return defaultValue;
 
@@ -47,7 +32,6 @@ export function createStorageStore<T>(
 
       const parsed = JSON.parse(raw);
 
-      // Validate with Zod schema if provided
       if (schema) {
         const result = schema.safeParse(parsed);
         if (!result.success) {
@@ -58,7 +42,6 @@ export function createStorageStore<T>(
           return defaultValue;
         }
 
-        // Apply maxItems limit if specified and data is an array
         if (maxItems && Array.isArray(result.data)) {
           return result.data.slice(0, maxItems) as T;
         }
@@ -66,7 +49,6 @@ export function createStorageStore<T>(
         return result.data;
       }
 
-      // Apply maxItems limit if specified and data is an array (no schema validation)
       if (maxItems && Array.isArray(parsed)) {
         return parsed.slice(0, maxItems) as T;
       }
@@ -78,23 +60,17 @@ export function createStorageStore<T>(
     }
   }
 
-  /**
-   * Save data to localStorage with debouncing
-   */
   function saveToStorage(value: T) {
     if (!browser) return;
 
-    // Clear existing timeout
     if (saveTimeout) {
       clearTimeout(saveTimeout);
     }
 
-    // Debounce the save operation
     saveTimeout = setTimeout(() => {
       try {
         let valueToSave = value;
 
-        // Apply maxItems limit if specified and value is an array
         if (maxItems && Array.isArray(value)) {
           valueToSave = value.slice(0, maxItems) as T;
         }
@@ -106,18 +82,12 @@ export function createStorageStore<T>(
     }, debounceMs);
   }
 
-  /**
-   * Initialize the store by loading data from localStorage
-   */
   function initialize() {
     if (initialized || !browser) return;
     data = loadFromStorage();
     initialized = true;
   }
 
-  /**
-   * Update the data and trigger save
-   */
   function setData(newData: T) {
     data = newData;
     if (initialized) {
@@ -125,23 +95,14 @@ export function createStorageStore<T>(
     }
   }
 
-  /**
-   * Update data using a function
-   */
   function updateData(updater: (current: T) => T) {
     setData(updater(data));
   }
 
-  /**
-   * Reset data to default value
-   */
   function reset() {
     setData(defaultValue);
   }
 
-  /**
-   * Clear data from localStorage
-   */
   function clear() {
     if (browser) {
       localStorage.removeItem(key);

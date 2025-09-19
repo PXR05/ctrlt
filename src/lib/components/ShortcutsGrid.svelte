@@ -2,19 +2,21 @@
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as Dropdown from "$lib/components/ui/dropdown-menu/index.js";
   import { Input } from "$lib/components/ui/input";
+  import { Label } from "$lib/components/ui/label";
   import type { Shortcut } from "$lib/data/default.js";
   import { shortcuts as defaultShortcuts } from "$lib/data/default.js";
   import { createStorageStore } from "$lib/stores/data.svelte.js";
-  import { z } from "zod";
-  import PlusIcon from "@lucide/svelte/icons/plus";
-  import PencilIcon from "@lucide/svelte/icons/pencil";
-  import TrashIcon from "@lucide/svelte/icons/trash";
   import MoreVertical from "@lucide/svelte/icons/more-vertical";
+  import PencilIcon from "@lucide/svelte/icons/pencil";
+  import PlusIcon from "@lucide/svelte/icons/plus";
+  import TrashIcon from "@lucide/svelte/icons/trash";
+  import { z } from "zod";
 
   const MAX_SHORTCUTS = 9;
   const columns = 3;
 
   const shortcutSchema = z.object({
+    id: z.number(),
     name: z.string(),
     url: z.string(),
     icon: z.string(),
@@ -34,16 +36,24 @@
 
   const items = $derived(shortcutsStore.data);
 
+  const gridItems = $derived.by(() => {
+    const grid: (Shortcut | null)[] = new Array(9).fill(null);
+    items.forEach((shortcut) => {
+      if (shortcut.id >= 0 && shortcut.id < 9) {
+        grid[shortcut.id] = shortcut;
+      }
+    });
+    return grid;
+  });
+
   let dialogOpen = $state(false);
   let editingIndex = $state<number | null>(null);
+  let addingToPosition = $state<number | null>(null);
   let form = $state<{ name: string; url: string; icon: string }>({
     name: "",
     url: "",
     icon: "",
   });
-  const nameId = "shortcut-name";
-  const urlId = "shortcut-url";
-  const iconId = "shortcut-icon";
   let saving = $state(false);
 
   function getHost(url: string): string {
@@ -54,16 +64,17 @@
     }
   }
 
-  function openAddDialog() {
+  function openAddDialog(position: number) {
     editingIndex = null;
+    addingToPosition = position;
     form = { name: "", url: "", icon: "" };
     dialogOpen = true;
   }
 
-  function openEditDialog(index: number) {
-    editingIndex = index;
-    const current = items[index];
-    form = { name: current.name, url: current.url, icon: current.icon };
+  function openEditDialog(shortcut: Shortcut) {
+    editingIndex = shortcut.id;
+    addingToPosition = null;
+    form = { name: shortcut.name, url: shortcut.url, icon: shortcut.icon };
     dialogOpen = true;
   }
 
@@ -112,13 +123,17 @@
       icon = await resolveIconForUrl(url);
     }
     if (!icon && editingIndex !== null) {
-      icon = items[editingIndex]?.icon || icon;
+      const currentItem = items.find((item) => item.id === editingIndex);
+      icon = currentItem?.icon || icon;
     }
+    const targetId = editingIndex !== null ? editingIndex : addingToPosition!;
     const nextItem: Shortcut = {
+      id: targetId,
       name,
       url,
       icon: icon || `https://icons.duckduckgo.com/ip3/${getHost(url)}.ico`,
     };
+
     if (editingIndex === null) {
       if (items.length >= MAX_SHORTCUTS) {
         saving = false;
@@ -126,151 +141,140 @@
       }
       shortcutsStore.setData([...items, nextItem]);
     } else {
-      const next = [...items];
-      next[editingIndex] = nextItem;
+      const next = items.map((item) =>
+        item.id === editingIndex ? nextItem : item
+      );
       shortcutsStore.setData(next);
     }
     saving = false;
     dialogOpen = false;
   }
 
-  function removeAt(index: number) {
+  function removeShortcut(id: number) {
     shortcutsStore.updateData((current) => {
-      const next = current.slice();
-      next.splice(index, 1);
-      return next;
+      return current.filter((item) => item.id !== id);
     });
   }
-
-  const addSpanClass = $derived.by(() => {
-    if (items.length >= MAX_SHORTCUTS) return "";
-    const mod = items.length % 3;
-    if (mod === 0) return "col-span-3";
-    if (mod === 1) return "col-span-2";
-    return "col-span-1";
-  });
 </script>
 
 <div class="md:col-span-2 grid grid-cols-3 border select-none">
-  {#each items as shortcut, i}
+  {#each gridItems as gridItem, position}
     <div
       class="relative group flex items-center px-3 py-2 hover:bg-white/5 transition-colors
-			{i % columns !== columns - 1 ? 'border-r' : ''}
-			{i < items.length - columns ? 'border-b' : ''}"
+			{position % columns !== columns - 1 ? 'border-r' : ''}
+			{position < 6 ? 'border-b' : ''}"
     >
-      <a
-        href={shortcut.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex items-center gap-3 min-w-0 flex-1"
-      >
-        <img 
-          draggable="false" 
-          src={shortcut.icon} 
-          alt={shortcut.name} 
-          class="size-6 shrink-0" 
-        />
-        <div class="min-w-0">
-          <div class="truncate text-sm">{shortcut.name}</div>
-          <div class="text-muted-foreground/50 text-xs truncate">
-            {getHost(shortcut.url)}
+      {#if gridItem}
+        <a
+          href={gridItem.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-3 min-w-0 flex-1"
+        >
+          <img
+            draggable="false"
+            src={gridItem.icon}
+            alt={gridItem.name}
+            class="size-6 shrink-0"
+          />
+          <div class="min-w-0">
+            <div class="truncate text-sm">{gridItem.name}</div>
+            <div class="text-muted-foreground/50 text-xs truncate">
+              {getHost(gridItem.url)}
+            </div>
           </div>
-        </div>
-      </a>
-      <div class="absolute right-0 transition-all top-1/2 -translate-y-1/2">
-        <Dropdown.DropdownMenu>
-          <Dropdown.DropdownMenuTrigger
-            class="opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 group-hover:mr-1 data-[state=open]:mr-1 p-1 rounded text-muted-foreground hover:text-foreground transition-all"
-            aria-label="Actions"
-          >
-            <MoreVertical class="size-4" />
-          </Dropdown.DropdownMenuTrigger>
-          <Dropdown.DropdownMenuContent
-            class="border bg-background w-fit min-w-0 p-0"
-            align="end"
-            alignOffset={-10}
-          >
-            <Dropdown.DropdownMenuItem onclick={() => openEditDialog(i)}>
-              <PencilIcon class="size-3.5" />
-              <span class="text-sm"> Edit </span>
-            </Dropdown.DropdownMenuItem>
-            <Dropdown.DropdownMenuItem
-              variant="destructive"
-              onclick={() => removeAt(i)}
+        </a>
+        <div class="absolute right-0 transition-all top-1/2 -translate-y-1/2">
+          <Dropdown.DropdownMenu>
+            <Dropdown.DropdownMenuTrigger
+              class="opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 group-hover:mr-1 data-[state=open]:mr-1 p-1 rounded text-muted-foreground hover:text-foreground transition-all"
+              aria-label="Actions"
             >
-              <TrashIcon class="size-3.5" />
-              <span class="text-sm"> Remove </span>
-            </Dropdown.DropdownMenuItem>
-          </Dropdown.DropdownMenuContent>
-        </Dropdown.DropdownMenu>
-      </div>
+              <MoreVertical class="size-4" />
+            </Dropdown.DropdownMenuTrigger>
+            <Dropdown.DropdownMenuContent
+              class="border bg-background w-fit min-w-0 p-0"
+              align="end"
+              alignOffset={-10}
+            >
+              <Dropdown.DropdownMenuItem
+                onclick={() => openEditDialog(gridItem)}
+              >
+                <PencilIcon class="size-3.5" />
+                <span class="text-sm"> Edit </span>
+              </Dropdown.DropdownMenuItem>
+              <Dropdown.DropdownMenuItem
+                onclick={() => removeShortcut(gridItem.id)}
+              >
+                <TrashIcon class="size-3.5" />
+                <span class="text-sm"> Remove </span>
+              </Dropdown.DropdownMenuItem>
+            </Dropdown.DropdownMenuContent>
+          </Dropdown.DropdownMenu>
+        </div>
+      {:else}
+        <button
+          class="flex items-center gap-3 w-full"
+          onclick={() => openAddDialog(position)}
+          type="button"
+        >
+          <div
+            class="size-6 shrink-0 grid place-items-center border border-dashed border-muted-foreground/30"
+          >
+            <PlusIcon class="size-4 text-muted-foreground/50" />
+          </div>
+          <div class="text-left text-muted-foreground/50 truncate">
+            <div class="truncate text-sm">Add shortcut</div>
+            <div class="text-xs truncate">
+              #{position + 1}
+            </div>
+          </div>
+        </button>
+      {/if}
     </div>
   {/each}
-
-  {#if items.length < MAX_SHORTCUTS}
-    <button
-      class="flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors border-t {addSpanClass}"
-      onclick={openAddDialog}
-      type="button"
-    >
-      <div class="size-6 shrink-0 grid place-items-center border">
-        <PlusIcon class="size-4" />
-      </div>
-      <div class="text-left">
-        <div class="truncate text-sm">Add shortcut</div>
-        <div class="text-muted-foreground/50 text-xs truncate">
-          {MAX_SHORTCUTS - items.length} slots left
-        </div>
-      </div>
-    </button>
-  {/if}
 </div>
 
 <Dialog.Root bind:open={dialogOpen}>
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title
-        >{editingIndex === null
-          ? "Add shortcut"
-          : "Edit shortcut"}</Dialog.Title
-      >
-      <Dialog.Description>Provide name and URL</Dialog.Description>
+      <Dialog.Title class="font-medium">
+        {editingIndex === null
+          ? `Add shortcut #${addingToPosition! + 1}`
+          : "Edit shortcut"}
+      </Dialog.Title>
     </Dialog.Header>
     <form class="grid gap-3" onsubmit={handleSubmit}>
       <div class="grid gap-1">
-        <label class="text-sm" for={nameId}>Name</label>
-        <Input
-          id={nameId}
-          bind:value={form.name}
-          placeholder="e.g. YouTube"
-          class="h-9"
-        />
+        <Label class="text-sm">Name</Label>
+        <Input bind:value={form.name} placeholder="e.g. YouTube" class="h-9" />
       </div>
       <div class="grid gap-1">
-        <label class="text-sm" for={urlId}>URL</label>
+        <Label class="text-sm">URL</Label>
         <Input
-          id={urlId}
           bind:value={form.url}
           placeholder="https://example.com"
           class="h-9"
         />
       </div>
       <div class="grid gap-1">
-        <label class="text-sm" for={iconId}>Icon URL (optional)</label>
+        <Label class="text-sm">Icon URL (optional)</Label>
         <Input
-          id={iconId}
           bind:value={form.icon}
           placeholder="Leave blank to auto-detect"
           class="h-9"
         />
       </div>
       <Dialog.Footer>
-        <Dialog.Close type="button" class="px-3 py-2 border hover:bg-muted"
-          >Cancel</Dialog.Close
+        <Dialog.Close
+          type="button"
+          class="text-sm px-3 py-2 border hover:bg-muted"
         >
+          Cancel
+        </Dialog.Close>
         <button
           type="submit"
-          class="px-3 py-2 border hover:bg-muted"
+          class="px-3 py-2 border hover:bg-muted text-sm"
           disabled={saving}>{saving ? "Saving..." : "Save"}</button
         >
       </Dialog.Footer>

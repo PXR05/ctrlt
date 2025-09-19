@@ -1,4 +1,5 @@
 export interface Shortcut {
+  id: number;
   name: string;
   url: string;
   icon: string;
@@ -11,33 +12,47 @@ export interface SearchEngine {
   icon: string;
 }
 
+export interface ColorValue {
+  name: string;
+  variable: string;
+  value: string;
+}
+
+export type Theme = ColorValue[];
+
 export const shortcuts: Shortcut[] = [
   {
+    id: 0,
     name: "YouTube",
     url: "https://youtube.com",
     icon: "https://www.youtube.com/s/desktop/9b55e232/img/favicon_144x144.png",
   },
   {
+    id: 1,
     name: "Yorishiro",
     url: "https://yorishiro.pages.dev",
     icon: "https://yorishiro.pages.dev/icons/icon.svg",
   },
   {
+    id: 2,
     name: "Reddit",
     url: "https://reddit.com",
     icon: "https://www.redditstatic.com/shreddit/assets/favicon/192x192.png",
   },
   {
+    id: 3,
     name: "AniList",
     url: "https://anilist.co/home",
     icon: "https://anilist.co/img/icons/apple-touch-icon.png",
   },
   {
+    id: 4,
     name: "Keep",
     url: "https://keep.google.com/u/1/#home",
     icon: "https://ssl.gstatic.com/keep/keep_2023q4.ico",
   },
   {
+    id: 5,
     name: "Email",
     url: "https://mail.proton.me/u/0/inbox",
     icon: "https://mail.proton.me/assets/favicon.ico",
@@ -62,5 +77,38 @@ export const engines: SearchEngine[] = [
     url: "https://bing.com/search?q=",
     suggestUrl: "https://www.bing.com/osjson.aspx?query=",
     icon: "https://www.bing.com/sa/simg/favicon-2x.ico",
+  },
+];
+
+export const theme: Theme = [
+  {
+    name: "Background",
+    variable: "--background",
+    value: "#0A0A0A",
+  },
+  {
+    name: "Foreground",
+    variable: "--foreground",
+    value: "#FAFAFA",
+  },
+  {
+    name: "Muted",
+    variable: "--muted",
+    value: "#262626",
+  },
+  {
+    name: "Muted Foreground",
+    variable: "--muted-foreground",
+    value: "#A1A1A1",
+  },
+  {
+    name: "Border",
+    variable: "--border",
+    value: "#ffffff26",
+  },
+  {
+    name: "Accent",
+    variable: "--accent",
+    value: "#262626",
   },
 ];
