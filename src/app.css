@@ -7,8 +7,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  font-size: 120%;
   --mono: 'Fira Mono', monospace;
   --radius: 0rem;
+
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

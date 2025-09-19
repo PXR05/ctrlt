@@ -55,7 +55,7 @@ export const shortcuts: Shortcut[] = [
     id: 5,
     name: "GitHub",
     url: "https://github.com/",
-    icon: "https://github.githubassets.com/favicons/favicon.svg",
+    icon: "https://github.githubassets.com/favicons/favicon-dark.svg",
   },
   {
     id: 6,

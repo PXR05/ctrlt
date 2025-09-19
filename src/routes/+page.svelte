@@ -16,7 +16,7 @@
   >
     <PencilIcon class="size-4" />
   </button>
-  <div class="max-w-[min(800px,95vw)]">
+  <div class="max-w-[min(1000px,95vw)]">
     <div class="p-4 sm:p-6 md:p-8 grid gap-2">
       <SearchBar />
       <div class="grid gap-2 md:grid-cols-3 min-h-40">

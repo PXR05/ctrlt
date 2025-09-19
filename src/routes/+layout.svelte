@@ -7,7 +7,7 @@
 </script>
 
 <Sidebar.Provider class="bg-background flex-row-reverse">
-  <Sidebar.Root side="right" class="">
+  <Sidebar.Root side="right">
     <Sidebar.Content class="bg-background">
       <ThemeSidebar />
     </Sidebar.Content>
