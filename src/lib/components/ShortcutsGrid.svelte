@@ -164,9 +164,14 @@
         rel="noopener noreferrer"
         class="flex items-center gap-3 min-w-0 flex-1"
       >
-        <img src={shortcut.icon} alt={shortcut.name} class="size-6 shrink-0" />
+        <img 
+          draggable="false" 
+          src={shortcut.icon} 
+          alt={shortcut.name} 
+          class="size-6 shrink-0" 
+        />
         <div class="min-w-0">
-          <div class="truncate">{shortcut.name}</div>
+          <div class="truncate text-sm">{shortcut.name}</div>
           <div class="text-muted-foreground/50 text-xs truncate">
             {getHost(shortcut.url)}
           </div>
@@ -186,14 +191,14 @@
             alignOffset={-10}
           >
             <Dropdown.DropdownMenuItem onclick={() => openEditDialog(i)}>
-              <PencilIcon class="size-4" />
+              <PencilIcon class="size-3.5" />
               <span class="text-sm"> Edit </span>
             </Dropdown.DropdownMenuItem>
             <Dropdown.DropdownMenuItem
               variant="destructive"
               onclick={() => removeAt(i)}
             >
-              <TrashIcon class="size-4" />
+              <TrashIcon class="size-3.5" />
               <span class="text-sm"> Remove </span>
             </Dropdown.DropdownMenuItem>
           </Dropdown.DropdownMenuContent>
@@ -212,7 +217,7 @@
         <PlusIcon class="size-4" />
       </div>
       <div class="text-left">
-        <div class="truncate">Add shortcut</div>
+        <div class="truncate text-sm">Add shortcut</div>
         <div class="text-muted-foreground/50 text-xs truncate">
           {MAX_SHORTCUTS - items.length} slots left
         </div>

@@ -9,6 +9,8 @@
   import { browser } from "$app/environment";
   import { createStorageStore } from "$lib/stores/data.svelte.js";
   import { z } from "zod";
+  import { slide } from "svelte/transition";
+  import { quintInOut } from "svelte/easing";
 
   interface Suggestion {
     phrase: string;
@@ -112,7 +114,7 @@
       });
       suggestions = response;
       showSuggestions = suggestions.length > 0;
-    }, 150);
+    }, showSuggestions ? 150 : 0);
   }
 
   function handleKeyDown(
@@ -121,9 +123,11 @@
     }
   ) {
     if (!showSuggestions) {
-      const engine = engines.find((en) => en.name === selectedEngine);
-      if (engine && query.trim()) {
-        window.location.href = engine.url + encodeURIComponent(query.trim());
+      if (e.key === "Enter") {
+        const engine = engines.find((en) => en.name === selectedEngine);
+        if (engine && query.trim()) {
+          window.location.href = engine.url + encodeURIComponent(query.trim());
+        }
       }
       return;
     }
@@ -131,9 +135,11 @@
     if (e.key === "ArrowDown") {
       e.preventDefault();
       selectedIndex = Math.min(selectedIndex + 1, suggestions.length - 1);
+      scrollToSuggestion(selectedIndex);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       selectedIndex = Math.max(selectedIndex - 1, 0);
+      scrollToSuggestion(selectedIndex);
     } else if (e.key === "Escape") {
       e.preventDefault();
       selectedIndex = 0;
@@ -141,6 +147,13 @@
     } else if (e.key === "Enter") {
       e.preventDefault();
       selectSuggestion(suggestions[selectedIndex]);
+    }
+  }
+  
+  function scrollToSuggestion(i: number) {
+    const el = document.getElementById(`suggestion-${i}`);
+    if (el) {
+      el.scrollIntoView({ block: "nearest" });
     }
   }
 
@@ -169,6 +182,7 @@
         class="aspect-square p-0 bg-transparent border border-r-0 focus:outline-none focus-visible:ring-0 hover:bg-muted transition-colors"
       >
         <img
+          draggable="false"
           src={currentEngine?.icon}
           alt={currentEngine?.name}
           class="size-5 m-auto inline-block"
@@ -185,6 +199,7 @@
               {selected ? 'bg-muted font-medium' : ''}"
           >
             <img
+              draggable="false"
               src={engine.icon}
               alt={engine.name}
               class="size-5 inline-block"
@@ -209,20 +224,25 @@
 
   {#if showSuggestions && suggestions.length > 0}
     <div
+      transition:slide={{
+        duration: 200, 
+        easing: quintInOut
+      }}
       class="absolute top-full left-0 right-0 bg-background border border-t-0 rounded-b-md shadow-lg z-50 max-h-56 overflow-y-auto"
     >
       {#each suggestions as suggestion, i}
         <button
           type="button"
+          id="suggestion-{i}"
           data-selected={i === selectedIndex}
-          class="w-full text-left px-3 py-2 hover:bg-muted focus:bg-muted focus:outline-none data-[selected=true]:bg-muted cursor-pointer border-b border-border last:border-b-0"
+          class="w-full text-left px-2.5 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted focus:text-foreground focus:bg-muted focus:outline-none data-[selected=true]:text-foreground data-[selected=true]:bg-muted cursor-pointer border-b border-border last:border-b-0"
           onclick={() => selectSuggestion(suggestion)}
         >
           {#if suggestion.type === "NAVIGATION"}
-            <GlobeIcon class="size-4 text-muted-foreground inline-block mr-2" />
+            <GlobeIcon class="size-3 text-muted-foreground inline-block mr-1" />
           {:else}
             <SearchIcon
-              class="size-4 text-muted-foreground inline-block mr-2"
+              class="size-3 text-muted-foreground inline-block mr-1"
             />
           {/if}
           {suggestion.phrase}

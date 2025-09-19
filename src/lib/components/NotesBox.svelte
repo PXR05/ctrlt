@@ -1,36 +1,27 @@
 <script lang="ts">
-    interface Props {
-        editable?: boolean;
-        placeholder?: string;
-        onNotesChange?: (notes: string) => void;
-    }
+    import { createStorageStore } from "$lib/stores/data.svelte";
+    import { z } from "zod";
 
-    let {
-        editable = false,
-        placeholder = "notes...",
-        onNotesChange,
-    }: Props = $props();
+    const noteStore = createStorageStore(
+        {
+            key: "note",
+            defaultValue: "",
+            schema: z.string(),
+        },
+        {
+            debounceMs: 100,
+        },
+    );
 
-    let notes = $state("");
-
-    $effect(() => {
-        onNotesChange?.(notes);
-    });
+    let note = $derived(noteStore.data);
 </script>
 
 <aside class="border p-3 h-full md:h-auto">
-    {#if editable}
-        <textarea
-            bind:value={notes}
-            {placeholder}
-            class="w-full h-full bg-transparent text-muted-foreground text-sm leading-relaxed resize-none focus:outline-none"
-            rows="6"
-        ></textarea>
-    {:else}
-        <div
-            class="text-muted-foreground text-sm leading-relaxed whitespace-pre-line"
-        >
-            {notes || placeholder}
-        </div>
-    {/if}
+    <textarea
+        value={note}
+        oninput={(e) => noteStore.setData(e.currentTarget.value)}
+        placeholder="note..."
+        class="w-full h-full bg-transparent text-sm resize-none focus:outline-none"
+        rows="6"
+    ></textarea>
 </aside>
