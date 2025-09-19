@@ -16,7 +16,7 @@
         z.object({
           name: z.string(),
           variable: z.string(),
-          value: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, {
+          value: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
             message: "Invalid hex color",
           }),
         })
@@ -55,12 +55,12 @@
   function normalizeHex(value: string): string {
     let v = value.trim();
     if (!v.startsWith("#")) v = `#${v}`;
-    v = v.slice(0, 9).toUpperCase();
+    v = v.slice(0, 7).toUpperCase();
     return v;
   }
 
   function coerceValidHex6(value: string, fallback: string): string {
-    return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(value) ? value : fallback;
+    return /^#([0-9a-fA-F]{6})$/.test(value) ? value : fallback;
   }
 
   function updateColor(name: string, newValue: string) {
@@ -103,7 +103,7 @@
           <Sidebar.Input
             class="h-10 bg-transparent"
             {value}
-            placeholder="#RRGGBBAA"
+            placeholder="#RRGGBB"
             spellcheck={false}
             oninput={(e) => updateColor(name, e.currentTarget.value)}
           />

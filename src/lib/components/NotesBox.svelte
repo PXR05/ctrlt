@@ -4,7 +4,7 @@
 
   const noteStore = createStorageStore(
     {
-      key: "note",
+      key: "ctrlt.note",
       defaultValue: "",
       schema: z.string(),
     },
