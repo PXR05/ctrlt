@@ -3,7 +3,6 @@
   import { Label } from "$lib/components/ui/label";
   import { createStorageStore } from "$lib/stores/data.svelte";
   import { theme, type Theme } from "$lib/data/default";
-  import { hexToOklch } from "$lib/utils/color-converter";
   import { browser } from "$app/environment";
   import { z } from "zod";
   import { IsMobile } from "$lib/hooks/is-mobile.svelte";
@@ -11,7 +10,7 @@
 
   const colorStore = createStorageStore<Theme>(
     {
-      key: "startpage.colors",
+      key: "ctrlt.colors",
       defaultValue: theme,
       schema: z.array(
         z.object({
@@ -35,8 +34,7 @@
 
     colors.forEach(({ variable, value }) => {
       try {
-        const oklchValue = hexToOklch(value);
-        root.style.setProperty(variable, oklchValue);
+        root.style.setProperty(variable, value);
       } catch (error) {
         console.warn(`Failed to apply color ${variable}: ${value}`, error);
         root.style.setProperty(variable, value);

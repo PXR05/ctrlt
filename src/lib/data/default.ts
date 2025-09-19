@@ -53,9 +53,21 @@ export const shortcuts: Shortcut[] = [
   },
   {
     id: 5,
-    name: "Email",
-    url: "https://mail.proton.me/u/0/inbox",
-    icon: "https://mail.proton.me/assets/favicon.ico",
+    name: "GitHub",
+    url: "https://github.com/",
+    icon: "https://github.githubassets.com/favicons/favicon.svg",
+  },
+  {
+    id: 6,
+    name: "Photos",
+    url: "https://photos.google.com/u/1/",
+    icon: "https://www.gstatic.com/social/photosui/images/logo/1x/photos_512dp.png",
+  },
+  {
+    id: 7,
+    name: "Music",
+    url: "https://music.youtube.com/",
+    icon: "https://music.youtube.com/img/favicon_144.png",
   },
 ];
 

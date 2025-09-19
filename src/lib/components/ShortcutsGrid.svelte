@@ -26,7 +26,7 @@
 
   const shortcutsStore = createStorageStore(
     {
-      key: "startpage.shortcuts",
+      key: "ctrlt.shortcuts",
       defaultValue: defaultShortcuts,
       schema: shortcutsArraySchema,
       maxItems: MAX_SHORTCUTS,

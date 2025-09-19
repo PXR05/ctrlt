@@ -25,7 +25,7 @@
 
   const engineStore = createStorageStore(
     {
-      key: "startpage.searchengine",
+      key: "ctrlt.searchengine",
       defaultValue: engines[0].name,
       schema: engineNameSchema,
     },
