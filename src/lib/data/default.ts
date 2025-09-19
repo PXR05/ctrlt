@@ -65,6 +65,12 @@ export const shortcuts: Shortcut[] = [
   },
   {
     id: 7,
+    name: "Email",
+    url: "https://mail.proton.me/u/0/inbox",
+    icon: "https://mail.proton.me/assets/favicon.ico",
+  },
+  {
+    id: 8,
     name: "Music",
     url: "https://music.youtube.com/",
     icon: "https://music.youtube.com/img/favicon_144.png",
