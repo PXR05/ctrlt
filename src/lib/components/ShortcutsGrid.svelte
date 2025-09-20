@@ -186,16 +186,17 @@
         container: position.toString(),
         callbacks: { onDrop: handleDrop },
       }}
+      use:draggable={{
+        container: position.toString(),
+        dragData: gridItem,
+      }}
       class="relative group flex items-center px-3 py-2 hover:bg-muted transition-colors
 			{position % columns !== columns - 1 ? 'border-r' : ''}
 			{position < 6 ? 'border-b' : ''}"
     >
       {#if gridItem}
         <a
-          use:draggable={{
-            container: position.toString(),
-            dragData: gridItem,
-          }}
+          draggable="false"
           href={gridItem.url}
           class="flex items-center gap-3 min-w-0 flex-1"
         >
