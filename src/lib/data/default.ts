@@ -122,7 +122,7 @@ export const theme: Theme = [
   {
     name: "Border",
     variable: "--border",
-    value: "#A1A1A1",
+    value: "#262626",
   },
   {
     name: "Accent",
