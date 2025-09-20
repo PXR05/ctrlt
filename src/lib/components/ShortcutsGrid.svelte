@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as Dropdown from "$lib/components/ui/dropdown-menu/index.js";
   import { Input } from "$lib/components/ui/input";
@@ -11,12 +12,14 @@
   import PlusIcon from "@lucide/svelte/icons/plus";
   import TrashIcon from "@lucide/svelte/icons/trash";
   import { z } from "zod";
+  import { flip } from "svelte/animate";
 
   const MAX_SHORTCUTS = 9;
   const columns = 3;
 
   const shortcutSchema = z.object({
-    id: z.number(),
+    id: z.string(),
+    position: z.number(),
     name: z.string(),
     url: z.string(),
     icon: z.string(),
@@ -31,7 +34,7 @@
       schema: shortcutsArraySchema,
       maxItems: MAX_SHORTCUTS,
     },
-    { debounceMs: 200 }
+    { debounceMs: 200 },
   );
 
   const items = $derived(shortcutsStore.data);
@@ -39,15 +42,15 @@
   const gridItems = $derived.by(() => {
     const grid: (Shortcut | null)[] = new Array(9).fill(null);
     items.forEach((shortcut) => {
-      if (shortcut.id >= 0 && shortcut.id < 9) {
-        grid[shortcut.id] = shortcut;
+      if (shortcut.position >= 0 && shortcut.position < 9) {
+        grid[shortcut.position] = shortcut;
       }
     });
     return grid;
   });
 
   let dialogOpen = $state(false);
-  let editingIndex = $state<number | null>(null);
+  let editingID = $state<string | null>(null);
   let addingToPosition = $state<number | null>(null);
   let form = $state<{ name: string; url: string; icon: string }>({
     name: "",
@@ -65,14 +68,14 @@
   }
 
   function openAddDialog(position: number) {
-    editingIndex = null;
+    editingID = null;
     addingToPosition = position;
     form = { name: "", url: "", icon: "" };
     dialogOpen = true;
   }
 
   function openEditDialog(shortcut: Shortcut) {
-    editingIndex = shortcut.id;
+    editingID = shortcut.id;
     addingToPosition = null;
     form = { name: shortcut.name, url: shortcut.url, icon: shortcut.icon };
     dialogOpen = true;
@@ -122,19 +125,24 @@
     if (!icon) {
       icon = await resolveIconForUrl(url);
     }
-    if (!icon && editingIndex !== null) {
-      const currentItem = items.find((item) => item.id === editingIndex);
+    if (!icon && editingID !== null) {
+      const currentItem = items.find((item) => item.id === editingID);
       icon = currentItem?.icon || icon;
     }
-    const targetId = editingIndex !== null ? editingIndex : addingToPosition!;
+    const targetPosition =
+      editingID !== null
+        ? (items.find((item) => item.id === editingID)?.position ??
+          addingToPosition!)
+        : addingToPosition!;
     const nextItem: Shortcut = {
-      id: targetId,
+      id: crypto.randomUUID(),
+      position: targetPosition,
       name,
       url,
       icon: icon || `https://icons.duckduckgo.com/ip3/${getHost(url)}.ico`,
     };
 
-    if (editingIndex === null) {
+    if (editingID === null) {
       if (items.length >= MAX_SHORTCUTS) {
         saving = false;
         return;
@@ -142,7 +150,7 @@
       shortcutsStore.setData([...items, nextItem]);
     } else {
       const next = items.map((item) =>
-        item.id === editingIndex ? nextItem : item
+        item.id === editingID ? nextItem : item,
       );
       shortcutsStore.setData(next);
     }
@@ -150,22 +158,44 @@
     dialogOpen = false;
   }
 
-  function removeShortcut(id: number) {
+  function removeShortcut(id: string) {
     shortcutsStore.updateData((current) => {
       return current.filter((item) => item.id !== id);
     });
   }
+
+  function handleDrop(state: DragDropState<Shortcut>) {
+    const { draggedItem, sourceContainer, targetContainer } = state;
+    if (!targetContainer || sourceContainer === targetContainer) return;
+
+    const tempItems = items.filter((item) => item.id !== draggedItem.id);
+    tempItems.splice(parseInt(targetContainer), 0, draggedItem);
+    shortcutsStore.setData(
+      tempItems.map((item, index) => ({ ...item, position: index })),
+    );
+  }
 </script>
 
 <div class="md:col-span-2 grid grid-cols-3 border select-none">
-  {#each gridItems as gridItem, position}
+  {#each gridItems as gridItem, position (gridItem?.id)}
     <div
+      animate:flip={{
+        duration: 150,
+      }}
+      use:droppable={{
+        container: position.toString(),
+        callbacks: { onDrop: handleDrop },
+      }}
       class="relative group flex items-center px-3 py-2 hover:bg-muted transition-colors
 			{position % columns !== columns - 1 ? 'border-r' : ''}
 			{position < 6 ? 'border-b' : ''}"
     >
       {#if gridItem}
         <a
+          use:draggable={{
+            container: position.toString(),
+            dragData: gridItem,
+          }}
           href={gridItem.url}
           class="flex items-center gap-3 min-w-0 flex-1"
         >
@@ -237,7 +267,7 @@
   <Dialog.Content>
     <Dialog.Header>
       <Dialog.Title class="font-medium">
-        {editingIndex === null
+        {editingID === null
           ? `Add shortcut #${addingToPosition! + 1}`
           : "Edit shortcut"}
       </Dialog.Title>

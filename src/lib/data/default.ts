@@ -1,5 +1,6 @@
 export interface Shortcut {
-  id: number;
+  id: string;
+  position: number;
   name: string;
   url: string;
   icon: string;
@@ -22,55 +23,64 @@ export type Theme = ColorValue[];
 
 export const shortcuts: Shortcut[] = [
   {
-    id: 0,
+    id: "0",
+    position: 0,
     name: "YouTube",
     url: "https://youtube.com",
     icon: "https://www.youtube.com/s/desktop/9b55e232/img/favicon_144x144.png",
   },
   {
-    id: 1,
+    id: "1",
+    position: 1,
     name: "Yorishiro",
     url: "https://yorishiro.pages.dev",
     icon: "https://yorishiro.pages.dev/icons/icon.svg",
   },
   {
-    id: 2,
+    id: "2",
+    position: 2,
     name: "Reddit",
     url: "https://reddit.com",
     icon: "https://www.redditstatic.com/shreddit/assets/favicon/192x192.png",
   },
   {
-    id: 3,
+    id: "3",
+    position: 3,
     name: "AniList",
     url: "https://anilist.co/home",
     icon: "https://anilist.co/img/icons/apple-touch-icon.png",
   },
   {
-    id: 4,
+    id: "4",
+    position: 4,
     name: "Keep",
     url: "https://keep.google.com/u/1/#home",
     icon: "https://ssl.gstatic.com/keep/keep_2023q4.ico",
   },
   {
-    id: 5,
+    id: "5",
+    position: 5,
     name: "GitHub",
     url: "https://github.com/",
     icon: "https://github.githubassets.com/favicons/favicon-dark.svg",
   },
   {
-    id: 6,
+    id: "6",
+    position: 6,
     name: "Photos",
     url: "https://photos.google.com/u/1/",
     icon: "https://www.gstatic.com/social/photosui/images/logo/1x/photos_512dp.png",
   },
   {
-    id: 7,
+    id: "7",
+    position: 7,
     name: "Email",
     url: "https://mail.proton.me/u/0/inbox",
     icon: "https://mail.proton.me/assets/favicon.ico",
   },
   {
-    id: 8,
+    id: "8",
+    position: 8,
     name: "Music",
     url: "https://music.youtube.com/",
     icon: "https://music.youtube.com/img/favicon_144.png",
