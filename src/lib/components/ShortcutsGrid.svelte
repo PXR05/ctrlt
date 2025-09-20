@@ -178,7 +178,7 @@
 
 <div class="md:col-span-2 grid grid-cols-3 border select-none">
   {#each gridItems as gridItem, position (gridItem?.id)}
-    <div
+    <a
       animate:flip={{
         duration: 150,
       }}
@@ -186,18 +186,18 @@
         container: position.toString(),
         callbacks: { onDrop: handleDrop },
       }}
-      use:draggable={{
-        container: position.toString(),
-        dragData: gridItem,
-      }}
+      href={gridItem.url}
       class="relative group flex items-center px-3 py-2 hover:bg-muted transition-colors
 			{position % columns !== columns - 1 ? 'border-r' : ''}
 			{position < 6 ? 'border-b' : ''}"
+      draggable="false"
     >
       {#if gridItem}
-        <a
-          draggable="false"
-          href={gridItem.url}
+        <div
+          use:draggable={{
+            container: position.toString(),
+            dragData: gridItem,
+          }}
           class="flex items-center gap-3 min-w-0 flex-1"
         >
           <img
@@ -212,7 +212,7 @@
               {getHost(gridItem.url)}
             </div>
           </div>
-        </a>
+        </div>
         <div class="absolute right-0 transition-all top-1/2 -translate-y-1/2">
           <Dropdown.DropdownMenu>
             <Dropdown.DropdownMenuTrigger
@@ -260,7 +260,7 @@
           </div>
         </button>
       {/if}
-    </div>
+    </a>
   {/each}
 </div>
 
