@@ -13,6 +13,7 @@
   import TrashIcon from "@lucide/svelte/icons/trash";
   import { z } from "zod";
   import { flip } from "svelte/animate";
+  import { outboundTracker } from "$lib/utils/outbound-tracking";
 
   const MAX_SHORTCUTS = 9;
   const columns = 3;
@@ -34,7 +35,7 @@
       schema: shortcutsArraySchema,
       maxItems: MAX_SHORTCUTS,
     },
-    { debounceMs: 200 },
+    { debounceMs: 200 }
   );
 
   const items = $derived(shortcutsStore.data);
@@ -150,7 +151,7 @@
       shortcutsStore.setData([...items, nextItem]);
     } else {
       const next = items.map((item) =>
-        item.id === editingID ? nextItem : item,
+        item.id === editingID ? nextItem : item
       );
       shortcutsStore.setData(next);
     }
@@ -187,6 +188,10 @@
 
     shortcutsStore.setData(indexed);
   }
+
+  function handleShortcutClick(shortcut: Shortcut) {
+    outboundTracker.trackShortcut(shortcut.url, shortcut.name);
+  }
 </script>
 
 <div class="md:col-span-2 grid grid-cols-3 border select-none">
@@ -210,6 +215,7 @@
             dragData: gridItem,
           }}
           href={gridItem.url}
+          onclick={() => handleShortcutClick(gridItem)}
           class="flex items-center gap-3 min-w-0 flex-1 px-3 py-2"
         >
           <img

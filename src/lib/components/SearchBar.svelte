@@ -11,6 +11,7 @@
   import { z } from "zod";
   import { slide } from "svelte/transition";
   import { quintInOut } from "svelte/easing";
+  import { outboundTracker } from "$lib/utils/outbound-tracking";
 
   interface Suggestion {
     phrase: string;
@@ -84,6 +85,7 @@
 
   function selectSuggestion(suggestion: Suggestion) {
     if (suggestion.type === "NAVIGATION") {
+      outboundTracker.trackNavigation(suggestion.phrase, "search_suggestion");
       window.location.href = suggestion.phrase;
       return;
     }
@@ -91,7 +93,9 @@
     showSuggestions = false;
     const engine = engines.find((en) => en.name === selectedEngine);
     if (engine) {
-      window.location.href = engine.url + encodeURIComponent(suggestion.phrase);
+      const searchUrl = engine.url + encodeURIComponent(suggestion.phrase);
+      outboundTracker.trackSearch(searchUrl, suggestion.phrase, selectedEngine);
+      window.location.href = searchUrl;
     }
   }
 
@@ -128,7 +132,9 @@
     if (!showSuggestions && e.key === "Enter") {
       const engine = engines.find((en) => en.name === selectedEngine);
       if (engine && query.trim()) {
-        window.location.href = engine.url + encodeURIComponent(query.trim());
+        const searchUrl = engine.url + encodeURIComponent(query.trim());
+        outboundTracker.trackSearch(searchUrl, query.trim(), selectedEngine);
+        window.location.href = searchUrl;
       }
       return;
     }
