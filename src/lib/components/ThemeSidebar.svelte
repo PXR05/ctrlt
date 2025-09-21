@@ -19,10 +19,10 @@
           value: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
             message: "Invalid hex color",
           }),
-        })
+        }),
       ),
     },
-    { debounceMs: 100 }
+    { debounceMs: 100 },
   );
 
   const colors = $derived(colorStore.data);
@@ -49,7 +49,7 @@
   });
 
   const defaultValueByName = Object.fromEntries(
-    theme.map((c) => [c.name, c.value] as const)
+    theme.map((c) => [c.name, c.value] as const),
   ) as Record<string, string>;
 
   function normalizeHex(value: string): string {
@@ -66,7 +66,7 @@
   function updateColor(name: string, newValue: string) {
     const next = normalizeHex(newValue);
     colorStore.updateData((arr) =>
-      arr.map((c) => (c.name === name ? { ...c, value: next } : c))
+      arr.map((c) => (c.name === name ? { ...c, value: next } : c)),
     );
   }
 
@@ -96,7 +96,7 @@
             aria-label={`Pick ${name} color`}
             value={coerceValidHex6(
               value,
-              defaultValueByName[name] ?? "#000000"
+              defaultValueByName[name] ?? "#000000",
             )}
             oninput={(e) => updateColor(name, e.currentTarget.value)}
           />

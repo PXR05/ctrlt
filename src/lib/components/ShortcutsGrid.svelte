@@ -165,14 +165,27 @@
   }
 
   function handleDrop(state: DragDropState<Shortcut>) {
-    const { draggedItem, sourceContainer, targetContainer } = state;
+    const { sourceContainer, targetContainer } = state;
     if (!targetContainer || sourceContainer === targetContainer) return;
 
-    const tempItems = items.filter((item) => item.id !== draggedItem.id);
-    tempItems.splice(parseInt(targetContainer), 0, draggedItem);
-    shortcutsStore.setData(
-      tempItems.map((item, index) => ({ ...item, position: index })),
-    );
+    const sourceIndex = parseInt(sourceContainer);
+    const targetIndex = parseInt(targetContainer);
+
+    const copy = [...gridItems];
+    [copy[sourceIndex], copy[targetIndex]] = [
+      copy[targetIndex],
+      copy[sourceIndex],
+    ];
+
+    const indexed: Shortcut[] = [];
+    for (let i = 0; i < copy.length; i++) {
+      const item = copy[i];
+      if (item !== null) {
+        indexed.push({ ...item, position: i });
+      }
+    }
+
+    shortcutsStore.setData(indexed);
   }
 </script>
 
