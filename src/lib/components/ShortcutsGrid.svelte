@@ -35,13 +35,14 @@
       schema: shortcutsArraySchema,
       maxItems: MAX_SHORTCUTS,
     },
-    { debounceMs: 200 }
+    { debounceMs: 200 },
   );
 
   const items = $derived(shortcutsStore.data);
 
   const gridItems = $derived.by(() => {
     const grid: (Shortcut | null)[] = new Array(9).fill(null);
+    if (!shortcutsStore.initialized) return grid;
     items.forEach((shortcut) => {
       if (shortcut.position >= 0 && shortcut.position < 9) {
         grid[shortcut.position] = shortcut;
@@ -151,7 +152,7 @@
       shortcutsStore.setData([...items, nextItem]);
     } else {
       const next = items.map((item) =>
-        item.id === editingID ? nextItem : item
+        item.id === editingID ? nextItem : item,
       );
       shortcutsStore.setData(next);
     }
@@ -206,7 +207,8 @@
       }}
       class="relative group flex items-center hover:bg-muted transition-colors
 			{position % columns !== columns - 1 ? 'border-r' : ''}
-			{position < 6 ? 'border-b' : ''}"
+			{position < 6 ? 'border-b' : ''}
+			{shortcutsStore.initialized ? '' : 'pointer-events-none animate-pulse'}"
     >
       {#if gridItem}
         <a
