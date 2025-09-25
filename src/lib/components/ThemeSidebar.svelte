@@ -87,7 +87,7 @@
   </Sidebar.GroupLabel>
   <Sidebar.GroupContent class="flex flex-col gap-4 p-2">
     {#each colors as { name, value }}
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-1">
         <Label class="text-xs font-normal text-muted-foreground">{name}</Label>
         <div class="min-w-0 flex flex-1 items-center">
           <input

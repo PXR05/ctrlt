@@ -110,7 +110,7 @@ export function createStorageStore<T>(
     reset();
   }
 
-  $effect.pre(() => {
+  $effect(() => {
     if (browser && !initialized) {
       initialize();
     }

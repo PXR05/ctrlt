@@ -14,6 +14,7 @@
   import { z } from "zod";
   import { flip } from "svelte/animate";
   import { outboundTracker } from "$lib/utils/outbound-tracking";
+    import { fade } from "svelte/transition";
 
   const MAX_SHORTCUTS = 9;
   const columns = 3;
@@ -196,7 +197,7 @@
 </script>
 
 <div class="md:col-span-2 grid grid-cols-3 border select-none">
-  {#each gridItems as gridItem, position (gridItem?.id)}
+  {#each gridItems as gridItem, position (gridItem?.id ?? position)}
     <div
       animate:flip={{
         duration: 150,
@@ -263,7 +264,7 @@
         </div>
       {:else}
         <button
-          class="flex min-w-0 flex-1 items-center gap-3 w-full px-3 py-2"
+          class="flex items-center gap-3 min-w-0 flex-1 px-3 py-2"
           onclick={() => openAddDialog(position)}
           type="button"
         >
@@ -272,10 +273,10 @@
           >
             <PlusIcon class="size-4 text-muted-foreground/50" />
           </div>
-          <div class="text-left text-muted-foreground/50 truncate">
+          <div class="min-w-0 flex-1 text-left text-muted-foreground/50">
             <div class="truncate text-sm">Add shortcut</div>
             <div class="text-xs truncate">
-              #{position + 1}
+              #{position + 1}{@html "&nbsp;".repeat(20)}
             </div>
           </div>
         </button>
