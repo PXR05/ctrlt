@@ -263,7 +263,7 @@
         </div>
       {:else}
         <button
-          class="flex items-center gap-3 w-full px-3 py-2"
+          class="flex min-w-0 flex-1 items-center gap-3 w-full px-3 py-2"
           onclick={() => openAddDialog(position)}
           type="button"
         >
